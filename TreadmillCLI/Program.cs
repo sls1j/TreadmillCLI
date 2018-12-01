@@ -10,6 +10,9 @@ namespace TreadmillCLI
     {
         static void Main(string[] args)
         {
+            string comPort = args[0];
+            TreadmillProxy proxy = new TreadmillProxy(comPort);
+            ConsoleController controller = new ConsoleController(proxy);            
         }
     }
 }

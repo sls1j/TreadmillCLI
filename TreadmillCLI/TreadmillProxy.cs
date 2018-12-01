@@ -13,10 +13,11 @@ namespace TreadmillCLI
         private string _comPort;
         private SerialPort _com;
         private const double treadmillBeltLength = 2.864; // meters
-
+        private ManualResetEvent _quit;
         public TreadmillProxy(string comPort)
         {
             _comPort = comPort;
+            _quit = new ManualResetEvent(false);
             System.Threading.ThreadPool.QueueUserWorkItem(DoWork, null);
         }
 
@@ -71,8 +72,19 @@ namespace TreadmillCLI
 
         private void OpenPort()
         {
+            if ( _com != null )
+            {
+                _com.Close();
+                _com = null;
+            }
+
             _com = new SerialPort($"{_comPort}", 115200, Parity.None, 8, StopBits.None);
-            _com.Open();
+            _com.Open();            
+        }
+
+        public void Stop()
+        {
+            _quit.Set();
         }
     }
 

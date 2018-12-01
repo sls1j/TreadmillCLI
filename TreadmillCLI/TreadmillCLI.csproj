@@ -46,6 +46,7 @@
     <Compile Include="ConsoleController.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RunLine.cs" />
     <Compile Include="TreadmillProxy.cs" />
   </ItemGroup>
   <ItemGroup>
