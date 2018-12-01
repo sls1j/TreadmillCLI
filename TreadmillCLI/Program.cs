@@ -11,8 +11,12 @@ namespace TreadmillCLI
         static void Main(string[] args)
         {
             string comPort = args[0];
-            TreadmillProxy proxy = new TreadmillProxy(comPort);
-            //TreadmillSimulatorProxy proxy = new TreadmillSimulatorProxy();
+            ITreadmillProxy proxy = null;
+            if ( args.Length > 1 && args[1] == "-s" )
+                proxy = new TreadmillSimulatorProxy();
+            else
+              proxy = new TreadmillProxy(comPort);
+
             ConsoleController controller = new ConsoleController(proxy);
             controller.Start();
         }

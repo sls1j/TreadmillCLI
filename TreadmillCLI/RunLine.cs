@@ -37,7 +37,7 @@ namespace TreadmillCLI
             {
                 sb.Append($" {Difference.Value,5:0}m {FormatTime(TimeDifference.Value),5}");
 
-                if ( CatchupTime.HasValue )
+                if (CatchupTime.HasValue)
                 {
                     sb.Append($" CatchUp:{FormatTime(CatchupTime.Value):,5}");
                 }
@@ -52,14 +52,20 @@ namespace TreadmillCLI
 
         public static string FormatTime(TimeSpan time)
         {
-            if ( time.TotalHours > 0)
-            {
-                return $"{Math.Truncate(time.TotalHours)}:{time.Minutes:00}:{time.Seconds:00}";
-            }
-            else
-            {
-                return $"{time.Minutes:00}:{time.Seconds:00}";
-            }
+            bool isNeg = time.TotalHours < 0;
+            if (isNeg)
+                time = TimeSpan.FromSeconds(time.TotalSeconds * -1);
+
+            StringBuilder sb = new StringBuilder();
+            if (isNeg)
+                sb.Append("-");
+
+            if ( time.TotalHours >= 1.0)
+                sb.Append($"{Math.Truncate(time.TotalHours):00}");
+
+            sb.Append($"{time.Minutes:00}:{time.Seconds:00}");
+
+            return sb.ToString();
         }
 
         public override string ToString()
