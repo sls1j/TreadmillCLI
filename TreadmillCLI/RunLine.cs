@@ -35,7 +35,7 @@ namespace TreadmillCLI
             sb.Append($" {Speed,4:0.0}MPH");
             if (TargetPace.HasValue)
             {
-                sb.Append($" {Difference.Value,5:0}m {FormatTime(TimeDifference.Value),5}");
+                sb.Append($" {Difference.Value,7:0.0}m {FormatTime(TimeDifference.Value),5}");
 
                 if (CatchupTime.HasValue)
                 {

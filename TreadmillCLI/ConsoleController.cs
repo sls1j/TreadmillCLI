@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -142,7 +143,9 @@ namespace TreadmillCLI
                 line.TimeDifference = TimeSpan.FromSeconds(line.DifferenceMiles * line.Pace.TotalSeconds);
                 if (line.Pace < line.TargetPace && line.Difference < 0)
                 {
-                    line.CatchupTime = TimeSpan.FromMinutes(line.DifferenceMiles * (line.TargetPace - line.Pace).Value.TotalMinutes);
+                    double speedDiff = 1 / line.TargetPace.Value.TotalMinutes - 1 / line.Pace.TotalMinutes;
+                    line.CatchupTime = TimeSpan.FromMinutes(line.DifferenceMiles / speedDiff);
+                    Debug.WriteLine($"Catchup: {line.CatchupTime.Value}");
                 }
             }
             lock (_lines)
@@ -150,7 +153,7 @@ namespace TreadmillCLI
 
             lock (_display)
             {
-                while (_display.Count > Console.WindowHeight - 3)
+                while (_display.Count > Math.Max(1,Console.WindowHeight - 5))
                     _display.RemoveAt(_display.Count-1);
                 _display.Insert(0,line.ToDisplayLine(Console.WindowWidth));
             }
@@ -161,7 +164,7 @@ namespace TreadmillCLI
         {
             Console.SetCursorPosition(0, 0);
             string runStatus = (_running) ? "Running" : "Stopped";
-            string errorStatus = (_inError) ? "Error" : "Working";
+            string errorStatus = (_inError) ? "Error  " : "Working";
           
             Console.Write($"{DateTime.Now} "); // clock
 
@@ -174,7 +177,7 @@ namespace TreadmillCLI
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine();
             string targetPace = (_haveTargetPace) ? RunLine.FormatTime(_targetPace) : "None";
-            Console.WriteLine($"{targetPace}");
+            Console.WriteLine($"Target Pace: {targetPace}");
 
             // the history
             lock (_display)
