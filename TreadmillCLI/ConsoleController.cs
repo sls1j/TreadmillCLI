@@ -9,7 +9,7 @@ namespace TreadmillCLI
 {
     class ConsoleController
     {
-        private TreadmillProxy _treadmill;
+        private ITreadmillProxy _treadmill;
         private DateTime _startTime;
         private double _totalMeters = 0.0;
         private bool _running = false;
@@ -22,15 +22,16 @@ namespace TreadmillCLI
         private DateTime _errorStartTime;
         private ManualResetEvent _finished;
 
-        public ConsoleController(TreadmillProxy treadmill)
+        public ConsoleController(ITreadmillProxy treadmill)
         {
+            _running = false;
             _display = new List<string>();
             _lines = new List<RunLine>();
             _finished = new ManualResetEvent(false);
             _haveNewRecord = new AutoResetEvent(false);
             _treadmill = treadmill ?? throw new ArgumentNullException(nameof(treadmill));
             _treadmill.OnOdometer = HandleOnOdometer;
-            _treadmill.OnError = HandleOnError;            
+            _treadmill.OnError = HandleOnError;
         }
 
         public void Start()
@@ -41,10 +42,13 @@ namespace TreadmillCLI
 
         private void HandleOnError(bool error)
         {
-            if (error && !_inError)
+            if (error)
             {
-                _errorStartTime = DateTime.Now;
-                _inError = true;
+                if (!_inError)
+                {
+                    _errorStartTime = DateTime.Now;
+                    _inError = true;
+                }
             }
             else
             {
@@ -56,7 +60,7 @@ namespace TreadmillCLI
                     lock (_lines)
                     {
                         if (_lines.Count > 0)
-                            _totalMeters += minutesInError / _lines.Last().Pace.TotalMinutes * 1609.0; // in meters
+                            _totalMeters += 1609 * minutesInError / _lines.Last().Pace.TotalMinutes; // in meters
                     }
                 }
             }
@@ -66,41 +70,45 @@ namespace TreadmillCLI
         {
             while (true)
             {
-                if (_haveNewRecord.WaitOne(250))
-                    DrawDisplay();
-                else
+                _haveNewRecord.WaitOne(250);
+                DrawDisplay();
+
+                if (Console.KeyAvailable)
                 {
-                    if (Console.KeyAvailable)
+                    switch (Console.ReadKey().KeyChar)
                     {
-                        switch (Console.ReadKey().KeyChar)
-                        {
-                            case ' ':
-                            case '.':
-                                if (_running)
-                                {
-                                    _running = false;
-                                }
-                                else
-                                {
-                                    _running = true;
-                                    _startTime = DateTime.Now;
-                                    _totalMeters = 0;
-                                }
-                                // toggle start/stop
-                                break;
-                            case 's':
-                                // set the pace;
-                                Console.WriteLine("Enter the pace: ");
-                                string paceStr = Console.ReadLine();
-                                string[] parts = paceStr.Split('.');
-                                _targetPace = new TimeSpan(0, int.Parse(parts[0]), int.Parse(parts[1]));
-                                _haveTargetPace = true;
-                                break;
-                            case 'q':
-                                _treadmill.Stop();
-                                _finished.Set();
-                                return;
-                        }
+                        case ' ':
+                        case '.':
+                            if (_running)
+                            {
+                                _running = false;
+                            }
+                            else
+                            {
+                                _running = true;
+                                lock (_lines)
+                                    lock (_display)
+                                    {
+                                        _display.Clear();
+                                        _lines.Clear();
+                                    }
+                                _startTime = DateTime.Now;
+                                _totalMeters = 0;
+                            }
+                            // toggle start/stop
+                            break;
+                        case 's':
+                            // set the pace;
+                            Console.WriteLine("Enter the pace: ");
+                            string paceStr = Console.ReadLine();
+                            string[] parts = paceStr.Split('.');
+                            _targetPace = new TimeSpan(0, int.Parse(parts[0]), int.Parse(parts[1]));
+                            _haveTargetPace = true;
+                            break;
+                        case 'q':
+                            _treadmill.Stop();
+                            _finished.Set();
+                            return;
                     }
                 }
             }
@@ -111,25 +119,30 @@ namespace TreadmillCLI
             if (!_running)
                 return;
 
+            double miles = meters / 1609.0;
+
+            System.Diagnostics.Debug.WriteLine($"{meters}m {seconds}s");
+
             DateTime now = DateTime.Now;
             RunLine line = new RunLine();
             line.Time = now;
             line.Duration = now - _startTime;
-            line.Distance = (_totalMeters += meters);
+            _totalMeters += meters;
+            line.Distance = _totalMeters;
             line.DistanceMiles = line.Distance / 1609.0;
-            line.Pace = TimeSpan.FromMinutes(seconds / (60 * line.DistanceMiles));
-            line.Speed = 3600 * line.DistanceMiles / seconds;
+            line.Pace = TimeSpan.FromMinutes(seconds / (60 * miles));
+            line.Speed = 3600 * miles / seconds;
             if (_haveTargetPace)
             {
                 line.TargetPace = _targetPace;
-                double expectedDistanceMiles = line.Duration.TotalMinutes / line.Pace.TotalMinutes;
+                double expectedDistanceMiles = line.Duration.TotalMinutes / line.TargetPace.Value.TotalMinutes;
                 double expectedDistanceMeters = expectedDistanceMiles * 1609.0;
-                double diffMeters = _totalMeters - expectedDistanceMeters;
-                double diffMiles = line.DistanceMiles - expectedDistanceMiles;
-                double diffSeconds = diffMiles * line.Pace.TotalSeconds;
-                if (line.Pace > line.TargetPace)
+                line.Difference = _totalMeters - expectedDistanceMeters;
+                line.DifferenceMiles = line.DistanceMiles - expectedDistanceMiles;
+                line.TimeDifference = TimeSpan.FromSeconds(line.DifferenceMiles * line.Pace.TotalSeconds);
+                if (line.Pace < line.TargetPace && line.Difference < 0)
                 {
-                    line.CatchupTime = TimeSpan.FromMinutes(diffMiles * (line.Pace - line.TargetPace).Value.TotalMinutes);
+                    line.CatchupTime = TimeSpan.FromMinutes(line.DifferenceMiles * (line.TargetPace - line.Pace).Value.TotalMinutes);
                 }
             }
             lock (_lines)
@@ -137,9 +150,9 @@ namespace TreadmillCLI
 
             lock (_display)
             {
-                if (_display.Count > 10)
-                    _display.RemoveAt(0);
-                _display.Add(line.ToDisplayLine(Console.WindowWidth));
+                while (_display.Count > Console.WindowHeight - 3)
+                    _display.RemoveAt(_display.Count-1);
+                _display.Insert(0,line.ToDisplayLine(Console.WindowWidth));
             }
             _haveNewRecord.Set();
         }
@@ -147,15 +160,28 @@ namespace TreadmillCLI
         public void DrawDisplay()
         {
             Console.SetCursorPosition(0, 0);
-            Console.WriteLine($"{DateTime.Now}"); // clock
-            Console.WriteLine($""); // current run stats
+            string runStatus = (_running) ? "Running" : "Stopped";
+            string errorStatus = (_inError) ? "Error" : "Working";
+          
+            Console.Write($"{DateTime.Now} "); // clock
+
+            Console.Write($"{runStatus} "); // current run stats
+            if (_inError)
+                Console.ForegroundColor = ConsoleColor.Red;
+            else
+                Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write($"{errorStatus} ");
+            Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine();
+            string targetPace = (_haveTargetPace) ? RunLine.FormatTime(_targetPace) : "None";
+            Console.WriteLine($"{targetPace}");
+
             // the history
             lock (_display)
             {
                 for (int i = 0; i < _display.Count; i++)
                 {
-                    Console.WriteLine(_display[i]);
+                    Console.Write(_display[i]);
                 }
             }
         }

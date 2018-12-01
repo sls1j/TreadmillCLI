@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace TreadmillCLI
 {
-    class TreadmillProxy
+    class TreadmillProxy : ITreadmillProxy
     {
         private string _comPort;
         private SerialPort _com;
@@ -21,13 +21,21 @@ namespace TreadmillCLI
             System.Threading.ThreadPool.QueueUserWorkItem(DoWork, null);
         }
 
-        public OdometerEvent OnOdometer;
-        public ErrorEvent OnError;
+        public OdometerEvent OnOdometer { get; set; }
+        public ErrorEvent OnError { get; set; }
 
         private void DoWork(object state)
         {
             while (true)
             {
+                if (_quit.WaitOne(0))
+                {
+                    if (_com != null)
+                    {
+                        _com.Close();
+                        _com = null;
+                    }
+                }
                 try
                 {
                     if (null == _com)
@@ -55,7 +63,7 @@ namespace TreadmillCLI
                 }
                 catch (Exception)
                 {
-                    if (OnError == null)
+                    if (OnError != null)
                         OnError(true);
 
                     Thread.Sleep(2000);
@@ -72,14 +80,20 @@ namespace TreadmillCLI
 
         private void OpenPort()
         {
-            if ( _com != null )
+            if (_com != null)
             {
                 _com.Close();
                 _com = null;
             }
+            try
+            {
+                _com = new SerialPort($"{_comPort}", 115200, Parity.None, 8, StopBits.One);
+                _com.Open();
+            }
+            catch (Exception)
+            {
 
-            _com = new SerialPort($"{_comPort}", 115200, Parity.None, 8, StopBits.None);
-            _com.Open();            
+            }
         }
 
         public void Stop()

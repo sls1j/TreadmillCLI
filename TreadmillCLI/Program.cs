@@ -12,7 +12,9 @@ namespace TreadmillCLI
         {
             string comPort = args[0];
             TreadmillProxy proxy = new TreadmillProxy(comPort);
-            ConsoleController controller = new ConsoleController(proxy);            
+            //TreadmillSimulatorProxy proxy = new TreadmillSimulatorProxy();
+            ConsoleController controller = new ConsoleController(proxy);
+            controller.Start();
         }
     }
 }

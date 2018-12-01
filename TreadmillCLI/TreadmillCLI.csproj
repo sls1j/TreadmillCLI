@@ -44,10 +44,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConsoleController.cs" />
+    <Compile Include="ITreadmillProxy.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RunLine.cs" />
     <Compile Include="TreadmillProxy.cs" />
+    <Compile Include="TreadmillSimulatorProxy.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

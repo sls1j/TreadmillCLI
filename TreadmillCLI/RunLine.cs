@@ -18,7 +18,7 @@ namespace TreadmillCLI
         public double? Difference;
         public TimeSpan? TimeDifference;
         public TimeSpan? CatchupTime;
-        
+        internal double DifferenceMiles;
 
         public RunLine()
         {
@@ -28,10 +28,14 @@ namespace TreadmillCLI
         public string ToDisplayLine(int consoleWidth)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append($"{FormatTime(Duration):,6} {DistanceMiles:0.000,7}mi {Distance:7}m {FormatTime(Pace),5} {Speed:0.0,4}MPH");
+            sb.Append($"{FormatTime(Duration),6}");
+            sb.Append($" {DistanceMiles,6:0.000}mi");
+            sb.Append($" {Distance,6:0}m ");
+            sb.Append($" {FormatTime(Pace),5}");
+            sb.Append($" {Speed,4:0.0}MPH");
             if (TargetPace.HasValue)
             {
-                sb.Append($" {Difference:0,5}m {FormatTime(TimeDifference.Value):,5}");
+                sb.Append($" {Difference.Value,5:0}m {FormatTime(TimeDifference.Value),5}");
 
                 if ( CatchupTime.HasValue )
                 {
@@ -46,7 +50,7 @@ namespace TreadmillCLI
             return sb.ToString();
         }
 
-        private string FormatTime(TimeSpan time)
+        public static string FormatTime(TimeSpan time)
         {
             if ( time.TotalHours > 0)
             {
