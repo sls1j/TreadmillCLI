@@ -1,22 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO.Ports;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace TreadmillCLI
 {
-  class TreadmillProxy : ITreadmillProxy
+  class TreadmillProxyUdp : ITreadmillProxy
   {
-    private string _comPort;
-    private SerialPort _com;
+    private int _port;
+    private UdpClient _client;
     private const double treadmillBeltLength = 2.864; // meters
     private ManualResetEvent _quit;
-    public TreadmillProxy(string comPort)
+    public TreadmillProxyUdp(int port)
     {
-      _comPort = comPort;
+      _port = port;
       _quit = new ManualResetEvent(false);
       System.Threading.ThreadPool.QueueUserWorkItem(DoWork, null);
     }
@@ -31,18 +32,20 @@ namespace TreadmillCLI
       {
         if (_quit.WaitOne(0))
         {
-          if (_com != null)
+          if (_client != null)
           {
-            _com.Close();
-            _com = null;
+            _client.Close();
+            _client = null;
           }
         }
         try
         {
-          if (null == _com)
+          if (null == _client)
             throw new Exception();
 
-          string line = _com.ReadLine();
+          IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, _port);
+          byte[] buffer = _client.Receive(ref remoteEndPoint);
+          string line = Encoding.UTF8.GetString(buffer);
           if (!string.IsNullOrEmpty(line))
           {
             string[] values = line.Split(' ');
@@ -55,10 +58,12 @@ namespace TreadmillCLI
                   OnOdometer(treadmillBeltLength, interval);
                 }
                 break;
-              case "p": // pedometer reading
-                break;
-              case "t": // tilt reading
-                break;
+              case "p": // ping
+                if ( null != OnPing )
+                {
+                  OnPing();
+                }
+                break;            
             }
           }
         }
@@ -68,14 +73,8 @@ namespace TreadmillCLI
             OnError(true);
 
           Thread.Sleep(2000);
-          OpenPort();
-
-          if (_com.IsOpen)
-          {
+          if (OpenPort())
             OnError(false);
-          }
-          else
-            _com = null;
         }
       }
     }
@@ -84,10 +83,10 @@ namespace TreadmillCLI
     {
       try
       {
-        if (_com != null)
+        if (_client != null)
         {
-          _com.Close();
-          _com = null;
+          _client.Close();
+          _client = null;
         }
       }
       catch (Exception)
@@ -96,9 +95,8 @@ namespace TreadmillCLI
       }
       try
       {
-        _com = new SerialPort($"{_comPort}", 115200, Parity.None, 8, StopBits.One);
-        _com.Open();
-        return _com.IsOpen;
+        _client = new UdpClient(new IPEndPoint(IPAddress.Any, _port));
+        return true;
       }
       catch (Exception)
       {
