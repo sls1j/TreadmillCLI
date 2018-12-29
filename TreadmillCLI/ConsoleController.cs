@@ -13,6 +13,7 @@ namespace TreadmillCLI
     private ITreadmillProxy _treadmill;
     private DateTime _startTime;
     private double _totalMeters = 0.0;
+    private double _smoothSeconds = 0.0;
     private bool _running = false;
     private bool _haveTargetPace = false;
     private TimeSpan _targetPace = TimeSpan.FromMinutes(8);
@@ -98,6 +99,7 @@ namespace TreadmillCLI
                   }
                 _startTime = DateTime.Now;
                 _totalMeters = 0;
+                Console.Clear();
               }
               // toggle start/stop
               break;
@@ -108,6 +110,13 @@ namespace TreadmillCLI
               string[] parts = paceStr.Split('.');
               _targetPace = new TimeSpan(0, int.Parse(parts[0]), int.Parse(parts[1]));
               _haveTargetPace = true;
+              break;
+            case 'r':
+              _treadmill.Reset();
+              Console.Clear();
+              Console.WriteLine("Resetting");
+              Thread.Sleep(500);
+              Console.Clear();
               break;
             case 'q':
               _treadmill.Stop();
@@ -129,6 +138,7 @@ namespace TreadmillCLI
         return;
 
       double miles = meters / 1609.0;
+      _smoothSeconds = _smoothSeconds * 0.67 + seconds * 0.33;
 
       System.Diagnostics.Debug.WriteLine($"{meters}m {seconds}s");
 
@@ -139,8 +149,8 @@ namespace TreadmillCLI
       _totalMeters += meters;
       line.Distance = _totalMeters;
       line.DistanceMiles = line.Distance / 1609.0;
-      line.Pace = TimeSpan.FromMinutes(seconds / (60 * miles));
-      line.Speed = 3600 * miles / seconds;
+      line.Pace = TimeSpan.FromMinutes(_smoothSeconds / (60 * miles));
+      line.Speed = 3600 * miles / _smoothSeconds;
       if (_haveTargetPace)
       {
         line.TargetPace = _targetPace;

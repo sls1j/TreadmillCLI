@@ -59,11 +59,11 @@ namespace TreadmillCLI
                 }
                 break;
               case "p": // ping
-                if ( null != OnPing )
+                if (null != OnPing)
                 {
                   OnPing();
                 }
-                break;            
+                break;
             }
           }
         }
@@ -107,6 +107,14 @@ namespace TreadmillCLI
     public void Stop()
     {
       _quit.Set();
+    }
+
+    public void Reset()
+    {
+      UdpClient client = new UdpClient("192.168.4.11", 7123);
+
+      byte[] buffer = Encoding.UTF8.GetBytes("r");
+      client.Send(buffer, buffer.Length);
     }
   }
 }

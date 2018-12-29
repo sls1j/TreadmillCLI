@@ -110,5 +110,9 @@ namespace TreadmillCLI
     {
       _quit.Set();
     }
+
+    public void Reset()
+    {
+    }
   }
 }

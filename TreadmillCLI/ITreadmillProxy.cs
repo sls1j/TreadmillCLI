@@ -5,6 +5,7 @@
     ErrorEvent OnError { get; set; }
     OdometerEvent OnOdometer { get; set; }
     PingEvent OnPing { get; set; }
+    void Reset();
     void Stop();
   }
 
