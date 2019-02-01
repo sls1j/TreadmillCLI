@@ -14,13 +14,13 @@ namespace TreadmillCLI
     public double DistanceMiles;
     public TimeSpan Pace;
     public double Speed;
+    public TimeSpan RawPace;
+    public double RawSpeed;
     public TimeSpan? TargetPace;
     public double? Difference;
     public TimeSpan? TimeDifference;
     public TimeSpan? CatchupTime;
     public double DifferenceMiles;
-    public TimeSpan RawPace;
-    public double RawSpeed;
 
     public RunLine()
     {
