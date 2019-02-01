@@ -15,6 +15,7 @@ namespace TreadmillCLI
     private UdpClient _client;
     private const double treadmillBeltLength = 2.864; // meters
     private ManualResetEvent _quit;
+    private int _lastTickCount = -1;
     public TreadmillProxyUdp(int port)
     {
       _port = port;
@@ -53,9 +54,18 @@ namespace TreadmillCLI
             {
               case "o": // odomemeter reading
                 double interval = int.Parse(values[1]) / 1000.0; // in seconds
+                int tickCount = int.Parse(values[2]);
+                int diff;
+
+                // to handle wrap around
+                if (_lastTickCount > tickCount)
+                  diff = UInt16.MaxValue - _lastTickCount + tickCount;
+                else
+                  diff = tickCount - _lastTickCount;
+
                 if (null != OnOdometer)
                 {
-                  OnOdometer(treadmillBeltLength, interval);
+                  OnOdometer(treadmillBeltLength * diff, interval);
                 }
                 break;
               case "p": // ping

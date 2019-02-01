@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -13,7 +15,8 @@ namespace TreadmillCLI
     private ITreadmillProxy _treadmill;
     private DateTime _startTime;
     private double _totalMeters = 0.0;
-    private double _smoothSeconds = 0.0;
+    private  double _smoothSeconds = 0.0;
+    private RollingAverage _secondsAvg;
     private bool _running = false;
     private bool _haveTargetPace = false;
     private TimeSpan _targetPace = TimeSpan.FromMinutes(8);
@@ -32,6 +35,7 @@ namespace TreadmillCLI
       _lines = new List<RunLine>();
       _finished = new ManualResetEvent(false);
       _haveNewRecord = new AutoResetEvent(false);
+      _secondsAvg = new RollingAverage(3);
       _treadmill = treadmill ?? throw new ArgumentNullException(nameof(treadmill));
       _treadmill.OnOdometer = HandleOnOdometer;
       _treadmill.OnError = HandleOnError;
@@ -87,16 +91,25 @@ namespace TreadmillCLI
               if (_running)
               {
                 _running = false;
+                lock( _lines )
+                {
+                  if (_lines.Count > 0)
+                  {
+                    File.WriteAllText($"Run-{DateTime.Now.ToString("yyyyMMdd-hhmm")}.json", JsonConvert.SerializeObject(_lines, Formatting.Indented));
+                  }
+                }
               }
               else
               {
                 _running = true;
                 lock (_lines)
+                {
                   lock (_display)
                   {
                     _display.Clear();
                     _lines.Clear();
                   }
+                }
                 _startTime = DateTime.Now;
                 _totalMeters = 0;
                 Console.Clear();
@@ -138,7 +151,7 @@ namespace TreadmillCLI
         return;
 
       double miles = meters / 1609.0;
-      _smoothSeconds = _smoothSeconds * 0.67 + seconds * 0.33;
+      _smoothSeconds = _secondsAvg.Add(seconds);
 
       System.Diagnostics.Debug.WriteLine($"{meters}m {seconds}s");
 
@@ -151,6 +164,9 @@ namespace TreadmillCLI
       line.DistanceMiles = line.Distance / 1609.0;
       line.Pace = TimeSpan.FromMinutes(_smoothSeconds / (60 * miles));
       line.Speed = 3600 * miles / _smoothSeconds;
+      line.RawPace = TimeSpan.FromMinutes(seconds / (60 * miles));
+      line.RawSpeed = 3600 * miles / seconds;
+
       if (_haveTargetPace)
       {
         line.TargetPace = _targetPace;

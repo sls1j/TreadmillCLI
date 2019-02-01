@@ -18,7 +18,9 @@ namespace TreadmillCLI
     public double? Difference;
     public TimeSpan? TimeDifference;
     public TimeSpan? CatchupTime;
-    internal double DifferenceMiles;
+    public double DifferenceMiles;
+    public TimeSpan RawPace;
+    public double RawSpeed;
 
     public RunLine()
     {
