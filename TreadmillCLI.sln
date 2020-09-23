@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28010.2050
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TreadmillCLI", "TreadmillCLI\TreadmillCLI.csproj", "{999FC98F-13FB-458A-9E5B-763AD5B60FB2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RealtimePlotter", "RealtimePlotter\RealtimePlotter.csproj", "{0B251558-BB63-4435-8710-DEC481247DEA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{999FC98F-13FB-458A-9E5B-763AD5B60FB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{999FC98F-13FB-458A-9E5B-763AD5B60FB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{999FC98F-13FB-458A-9E5B-763AD5B60FB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B251558-BB63-4435-8710-DEC481247DEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B251558-BB63-4435-8710-DEC481247DEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B251558-BB63-4435-8710-DEC481247DEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B251558-BB63-4435-8710-DEC481247DEA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

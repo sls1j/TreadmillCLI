@@ -13,6 +13,7 @@ namespace TreadmillCLI
     public ErrorEvent OnError { get; set; }
     public OdometerEvent OnOdometer { get; set; }
     public PingEvent OnPing { get; set; }
+    public ValueEvent OnValue { get; set; }
 
     private ManualResetEvent _quit;
 

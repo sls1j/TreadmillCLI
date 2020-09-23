@@ -26,6 +26,8 @@ namespace TreadmillCLI
     public OdometerEvent OnOdometer { get; set; }
     public ErrorEvent OnError { get; set; }
     public PingEvent OnPing { get; set; }
+    public ValueEvent OnValue { get; set; }
+    
 
     private void DoWork(object state)
     {
@@ -63,6 +65,8 @@ namespace TreadmillCLI
                 else
                   diff = tickCount - _lastTickCount;
 
+                _lastTickCount = tickCount;
+
                 if (null != OnOdometer)
                 {
                   OnOdometer(treadmillBeltLength * diff, interval);
@@ -72,6 +76,16 @@ namespace TreadmillCLI
                 if (null != OnPing)
                 {
                   OnPing();
+                }
+                break;
+              case "v":
+                {
+                  double time = double.Parse(values[1]);
+                  double value = double.Parse(values[2]);
+                  if (null != OnValue)
+                  {
+                    OnValue(time,value);
+                  }
                 }
                 break;
             }

@@ -40,6 +40,14 @@ namespace TreadmillCLI
       _treadmill.OnOdometer = HandleOnOdometer;
       _treadmill.OnError = HandleOnError;
       _treadmill.OnPing = HandleOnPing;
+      _treadmill.OnValue = HandleOnValue;
+      File.Delete(@"c:\temp\tread_value.csv");
+    }
+
+    private void HandleOnValue(double time, double value)
+    {
+      string msg = $"{time} {value}{Environment.NewLine}";      
+      File.AppendAllText( @"c:\temp\tread_value.csv", $"{time} {value}{Environment.NewLine}");
     }
 
     public void Start()
