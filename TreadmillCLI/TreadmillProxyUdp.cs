@@ -54,6 +54,8 @@ namespace TreadmillCLI
             string[] values = line.Split(' ');
             switch (values[0])
             {
+              case "d":                
+                break;
               case "o": // odomemeter reading
                 double interval = int.Parse(values[1]) / 1000.0; // in seconds
                 int tickCount = int.Parse(values[2]);

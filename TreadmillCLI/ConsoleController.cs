@@ -41,7 +41,17 @@ namespace TreadmillCLI
       _treadmill.OnError = HandleOnError;
       _treadmill.OnPing = HandleOnPing;
       _treadmill.OnValue = HandleOnValue;
-      File.Delete(@"c:\temp\tread_value.csv");
+
+      Directory.CreateDirectory(@"c:\temp");
+
+      try
+      {
+        File.Delete(@"c:\temp\tread_value.csv");
+      }
+      catch(Exception ex)
+      {
+
+      }
     }
 
     private void HandleOnValue(double time, double value)
