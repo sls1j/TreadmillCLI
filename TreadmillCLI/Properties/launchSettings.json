@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TreadmillCLI": {
+      "commandName": "Project",
+      "commandLineArgs": "-c COM5"
+    }
+  }
+}

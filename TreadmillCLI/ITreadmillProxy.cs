@@ -13,5 +13,5 @@
   delegate void OdometerEvent(double meters, double seconds);
   delegate void PingEvent();
   delegate void ErrorEvent(bool error);
-  delegate void ValueEvent(double time, double value);
+  delegate void ValueEvent(int time, int ticks, int max, int min);
 }

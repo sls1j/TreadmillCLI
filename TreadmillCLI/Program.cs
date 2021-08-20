@@ -10,14 +10,22 @@ namespace TreadmillCLI
   {
     static void Main(string[] args)
     {
-      string comPort = args[0];
+      int i = 0;
       ITreadmillProxy proxy = null;
-      if (args.Length > 1 && args[1] == "-s")
-        proxy = new TreadmillSimulatorProxy();
-      //else if (args.Length > 1 && args[1] == "-c")
-      //  proxy = new TreadmillProxy(comPort);
-      else
-        proxy = new TreadmillProxyUdp(int.Parse(comPort));
+      switch (args[i])
+      {
+        case "-c":
+          string comPort = args[++i];
+          proxy = new TreadmillProxy(comPort);
+          break;
+        case "-u":
+          int udpPort = int.Parse(args[++i]);
+          proxy = new TreadmillProxyUdp(udpPort);
+          break;
+        case "-s":
+          proxy = new TreadmillSimulatorProxy();
+          break;
+      }
 
       ConsoleController controller = new ConsoleController(proxy);
       controller.Start();

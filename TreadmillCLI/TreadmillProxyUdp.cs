@@ -27,7 +27,7 @@ namespace TreadmillCLI
     public ErrorEvent OnError { get; set; }
     public PingEvent OnPing { get; set; }
     public ValueEvent OnValue { get; set; }
-    
+
 
     private void DoWork(object state)
     {
@@ -54,7 +54,7 @@ namespace TreadmillCLI
             string[] values = line.Split(' ');
             switch (values[0])
             {
-              case "d":                
+              case "d":
                 break;
               case "o": // odomemeter reading
                 double interval = int.Parse(values[1]) / 1000.0; // in seconds
@@ -82,11 +82,13 @@ namespace TreadmillCLI
                 break;
               case "v":
                 {
-                  double time = double.Parse(values[1]);
-                  double value = double.Parse(values[2]);
+                  int time = int.Parse(values[1]);
+                  int ticks = int.Parse(values[2]);
+                  int max = int.Parse(values[3]);
+                  int min = int.Parse(values[4]);
                   if (null != OnValue)
                   {
-                    OnValue(time,value);
+                    OnValue(time, ticks, max, min);
                   }
                 }
                 break;

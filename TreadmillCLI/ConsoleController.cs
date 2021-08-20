@@ -27,6 +27,8 @@ namespace TreadmillCLI
     private volatile bool _heartbeat = false;
     private DateTime _errorStartTime;
     private ManualResetEvent _finished;
+    private int _max = 0;
+    private int _min = 0;
 
     public ConsoleController(ITreadmillProxy treadmill)
     {
@@ -48,16 +50,16 @@ namespace TreadmillCLI
       {
         File.Delete(@"c:\temp\tread_value.csv");
       }
-      catch(Exception ex)
+      catch(Exception)
       {
 
       }
     }
 
-    private void HandleOnValue(double time, double value)
+    private void HandleOnValue(int time, int ticks, int max, int min)
     {
-      string msg = $"{time} {value}{Environment.NewLine}";      
-      File.AppendAllText( @"c:\temp\tread_value.csv", $"{time} {value}{Environment.NewLine}");
+      _max = max;
+      _min = min;      
     }
 
     public void Start()
@@ -228,6 +230,7 @@ namespace TreadmillCLI
       Console.Write($"{errorStatus} ");
       Console.ForegroundColor = ConsoleColor.White;
       Console.Write(heartbeat);
+      Console.Write($"  Min:{_min} Max:{_max} Diff:{_max-_min}          ");
       Console.WriteLine();
       string targetPace = (_haveTargetPace) ? RunLine.FormatTime(_targetPace) : "None";
       Console.WriteLine($"Target Pace: {targetPace}");
